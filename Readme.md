@@ -192,6 +192,7 @@ git config --global core.autocrlf input
 
 ```ruby
 host: [Nutzername].[Host].uberspace.de
+port: 443
 https: true
 [...]
 user: [Nutzername] # Auskommentierung muss entfernt werden ("#" am Anfang der Zeile entfernen)!
@@ -338,8 +339,13 @@ In `~/html` oder einem Subdomain-Ordner eine `.htaccess` erstellen und damit fü
     RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
 
     # redirect http-git requests to gitlab-workhorse
-    RewriteCond %{REQUEST_URI} .*\.(git)
-    RewriteRule .* http://127.0.0.1:[your git-http port]%{REQUEST_URI} [P,QSA]
+    RewriteCond %{REQUEST_URI} ^/[\w\.-]+/[\w\.-]+/gitlab-lfs/objects.* [OR]
+    RewriteCond %{REQUEST_URI} ^/[\w\.-]+/[\w\.-]+/builds/download.* [OR]
+    RewriteCond %{REQUEST_URI} ^/[\w\.-]+/[\w\.-]+/repository/archive.* [OR]
+    RewriteCond %{REQUEST_URI} ^/api/v3/projects/.*/repository/archive.* [OR]
+    RewriteCond %{REQUEST_URI} ^/ci/api/v1/builds/[0-9]+/artifacts.* [OR]
+    RewriteCond %{REQUEST_URI} ^/[\w\.-]+/[\w\.-]+/(info/refs|git-upload-pack|git-receive-pack)$
+    RewriteRule .* http://127.0.0.1:[your git-http port]%{REQUEST_URI} [L,P,QSA]
 
     # redirect any other traffic to unicorn
     RewriteBase /
